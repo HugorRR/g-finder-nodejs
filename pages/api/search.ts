@@ -40,7 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     if (geocodeResponse.data.status !== 'OK') {
-      return res.status(400).json({ message: 'CEP inválido ou não encontrado' });
+      return res.status(400).json({ 
+        message: 'CEP inválido ou não encontrado',
+        googleStatus: geocodeResponse.data.status
+      });
     }
 
     const location = geocodeResponse.data.results[0].geometry.location;
@@ -51,38 +54,67 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&keyword=${encodeURIComponent(keyword)}&key=${apiKey}`
     );
 
-    if (placesResponse.data.status !== 'OK') {
+    if (placesResponse.data.status !== 'OK' && placesResponse.data.status !== 'ZERO_RESULTS') {
       return res.status(400).json({ 
         message: 'Não foi possível encontrar resultados para a pesquisa',
         googleStatus: placesResponse.data.status
       });
     }
 
+    // Caso não encontre resultados, retornar array vazio
+    if (placesResponse.data.status === 'ZERO_RESULTS' || !placesResponse.data.results || !placesResponse.data.results.length) {
+      return res.status(200).json({ results: [] });
+    }
+
     // 3. Limitar aos primeiros resultados conforme solicitado
     const places = placesResponse.data.results.slice(0, Math.min(clientCount, 20));
     
-    // 4. Para cada lugar, obter mais detalhes, incluindo o telefone
-    const results = await Promise.all(
-      places.map(async (place: GooglePlace) => {
-        const detailsResponse = await axios.get<GooglePlaceDetails>(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number&key=${apiKey}`
-        );
+    try {
+      // 4. Para cada lugar, obter mais detalhes, incluindo o telefone
+      const results = await Promise.all(
+        places.map(async (place: GooglePlace) => {
+          try {
+            const detailsResponse = await axios.get(
+              `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number&key=${apiKey}`
+            );
 
-        const details = detailsResponse.data.result;
-        
-        return {
-          nome: details.name || place.name,
-          telefone: details.formatted_phone_number || 'Telefone não disponível'
-        };
-      })
-    );
-    
-    return res.status(200).json({ results });
-  } catch (error: any) {
+            const details = detailsResponse.data.result || {};
+            
+            return {
+              nome: details.name || place.name,
+              telefone: details.formatted_phone_number || 'Telefone não disponível'
+            };
+          } catch (placeError) {
+            console.error('Erro ao obter detalhes do lugar:', placeError);
+            return {
+              nome: place.name,
+              telefone: 'Telefone não disponível'
+            };
+          }
+        })
+      );
+      
+      return res.status(200).json({ results });
+    } catch (detailsError) {
+      console.error('Erro ao processar detalhes dos lugares:', detailsError);
+      // Retornar resultados parciais apenas com nomes
+      const basicResults = places.map(place => ({
+        nome: place.name,
+        telefone: 'Telefone não disponível'
+      }));
+      
+      return res.status(200).json({ 
+        results: basicResults,
+        warning: 'Alguns detalhes não puderam ser obtidos'
+      });
+    }
+  } catch (error: unknown) {
     console.error('Erro na API de busca:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    
     return res.status(500).json({ 
       message: 'Erro ao buscar dados', 
-      error: error.response?.data || error.message 
+      error: errorMessage
     });
   }
 } 

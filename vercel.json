@@ -1,13 +1,6 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "regions": ["brs1"],
-  "env": {
-    "GOOGLE_MAPS_API_KEY": "@google_maps_api_key"
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next"
 } 

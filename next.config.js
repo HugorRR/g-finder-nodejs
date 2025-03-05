@@ -7,6 +7,9 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  experimental: {
+    esmExternals: 'loose'
+  }
 };
 
 module.exports = nextConfig; 
