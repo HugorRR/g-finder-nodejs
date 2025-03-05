@@ -14,7 +14,7 @@ G-Finder é uma aplicação web para captação de clientes no Google Maps. Dese
 
 - **Frontend**: Next.js, React, Tailwind CSS
 - **Backend**: API Routes do Next.js
-- **Web Scraping**: Puppeteer
+- **API Externa**: Google Maps API (Geocoding, Places)
 - **Exportação de Dados**: XLSX
 
 ## Como Executar Localmente
@@ -30,25 +30,57 @@ G-Finder é uma aplicação web para captação de clientes no Google Maps. Dese
    npm install
    ```
 
-3. Execute o servidor de desenvolvimento:
+3. Configure as variáveis de ambiente:
+   - Crie um arquivo `.env.local` na raiz do projeto
+   - Adicione sua chave API do Google Maps:
+     ```
+     GOOGLE_MAPS_API_KEY=sua_chave_api_aqui
+     ```
+   - Você pode obter uma chave API no [Google Cloud Console](https://console.cloud.google.com/)
+   - Ative as APIs: Geocoding API, Places API
+
+4. Execute o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
 
-4. Acesse a aplicação em [http://localhost:3000](http://localhost:3000)
+5. Acesse a aplicação em [http://localhost:3000](http://localhost:3000)
 
 ## Implantação na Vercel
 
 Esta aplicação está otimizada para implantação na Vercel. Para implantar:
 
-1. Faça o fork deste repositório
-2. Importe o projeto na Vercel
-3. A Vercel detectará automaticamente as configurações do Next.js
+1. Faça o fork deste repositório para sua conta GitHub
+2. Crie uma conta na [Vercel](https://vercel.com/) se ainda não tiver
+3. Na dashboard da Vercel, clique em "New Project"
+4. Importe o repositório GitHub do G-Finder
+5. Configure sua variável de ambiente:
+   - Na tela de configuração do projeto, vá para a guia "Environment Variables"
+   - Adicione a variável: `GOOGLE_MAPS_API_KEY` com seu valor
+   - Você também pode usar os segredos da Vercel para isso:
+     ```bash
+     vercel secrets add google_maps_api_key "sua_chave_api_aqui"
+     ```
+6. Clique em "Deploy"
+7. Após a implantação, acesse sua aplicação através da URL fornecida pela Vercel
 
-## Limitações
+## Estrutura do Projeto
 
-- O uso do Puppeteer em ambientes serverless como a Vercel pode ter limitações de tempo de execução e recursos
-- Para uso intensivo, considere implementar um serviço de scraping dedicado
+```
+g-finder/
+├── components/        # Componentes React
+├── pages/             # Páginas e API Routes
+│   ├── api/           # Endpoints da API
+│   │   ├── export.ts  # API para exportação XLSX
+│   │   └── search.ts  # API para busca no Google Maps
+│   ├── _app.tsx       # Config do Next.js app
+│   └── index.tsx      # Página principal
+├── public/            # Arquivos estáticos
+├── styles/            # Estilos CSS/Tailwind
+├── next.config.js     # Configurações do Next.js
+├── vercel.json        # Configurações da Vercel
+└── package.json       # Dependências e scripts
+```
 
 ## Licença
 

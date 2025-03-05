@@ -1,5 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import puppeteer from 'puppeteer';
+import axios from 'axios';
+
+interface GooglePlace {
+  place_id: string;
+  name: string;
+}
+
+interface GooglePlaceDetails {
+  result: {
+    name: string;
+    formatted_phone_number?: string;
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -12,76 +24,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'Parâmetros inválidos' });
   }
 
-  try {
-    // Em um ambiente serverless como a Vercel, o uso do Puppeteer pode ser limitado
-    // Esta é uma implementação simplificada que pode precisar ser adaptada
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  // Definir uma chave API para Google Maps
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  
+  if (!apiKey) {
+    return res.status(500).json({ 
+      message: 'Chave de API do Google Maps não configurada. Configure a variável de ambiente GOOGLE_MAPS_API_KEY.' 
     });
+  }
 
-    const page = await browser.newPage();
-    await page.goto('https://www.google.com/maps/');
+  try {
+    // 1. Primeiro, converter o CEP em coordenadas de latitude e longitude
+    const geocodeResponse = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cep)}&key=${apiKey}`
+    );
 
-    // Buscar por CEP
-    await page.waitForSelector('#searchboxinput');
-    await page.type('#searchboxinput', cep);
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(3000);
-
-    // Buscar por palavra-chave
-    await page.click('#searchboxinput', { clickCount: 3 });
-    await page.type('#searchboxinput', keyword);
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(3000);
-
-    // Extrair resultados
-    const results = [];
-    const maxResults = Math.min(clientCount, 20); // Limitando a 20 para evitar problemas de timeout
-
-    for (let i = 0; i < maxResults; i++) {
-      try {
-        // Esperar pelos resultados
-        await page.waitForSelector('a[class*="hfpxzc"]', { timeout: 5000 });
-        
-        // Obter todos os elementos de resultado
-        const elements = await page.$$('a[class*="hfpxzc"]');
-        
-        if (i >= elements.length) break;
-        
-        // Clicar no resultado
-        await elements[i].click();
-        await page.waitForTimeout(2000);
-        
-        // Extrair nome
-        const nameElement = await page.waitForSelector('h1', { timeout: 5000 });
-        const name = await nameElement.evaluate(el => el.textContent);
-        
-        // Tentar extrair telefone
-        let phone = "Telefone não disponível";
-        try {
-          const phoneElement = await page.waitForSelector('button[data-item-id="phone:tel"]', { timeout: 3000 });
-          phone = await phoneElement.evaluate(el => el.textContent);
-        } catch (error) {
-          // Telefone não encontrado
-        }
-        
-        results.push({
-          nome: name,
-          telefone: phone
-        });
-        
-      } catch (error) {
-        console.error(`Erro ao extrair cliente ${i + 1}:`, error);
-        continue;
-      }
+    if (geocodeResponse.data.status !== 'OK') {
+      return res.status(400).json({ message: 'CEP inválido ou não encontrado' });
     }
 
-    await browser.close();
+    const location = geocodeResponse.data.results[0].geometry.location;
+    const { lat, lng } = location;
+
+    // 2. Usar a API Places para buscar negócios com a palavra-chave próximos ao CEP
+    const placesResponse = await axios.get(
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&keyword=${encodeURIComponent(keyword)}&key=${apiKey}`
+    );
+
+    if (placesResponse.data.status !== 'OK') {
+      return res.status(400).json({ 
+        message: 'Não foi possível encontrar resultados para a pesquisa',
+        googleStatus: placesResponse.data.status
+      });
+    }
+
+    // 3. Limitar aos primeiros resultados conforme solicitado
+    const places = placesResponse.data.results.slice(0, Math.min(clientCount, 20));
+    
+    // 4. Para cada lugar, obter mais detalhes, incluindo o telefone
+    const results = await Promise.all(
+      places.map(async (place: GooglePlace) => {
+        const detailsResponse = await axios.get<GooglePlaceDetails>(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number&key=${apiKey}`
+        );
+
+        const details = detailsResponse.data.result;
+        
+        return {
+          nome: details.name || place.name,
+          telefone: details.formatted_phone_number || 'Telefone não disponível'
+        };
+      })
+    );
     
     return res.status(200).json({ results });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro na API de busca:', error);
-    return res.status(500).json({ message: 'Erro ao buscar dados', error: error.message });
+    return res.status(500).json({ 
+      message: 'Erro ao buscar dados', 
+      error: error.response?.data || error.message 
+    });
   }
 } 
