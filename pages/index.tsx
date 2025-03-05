@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaSearch, FaMapMarkerAlt, FaDownload, FaSpinner } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaDownload, FaSpinner, FaBuilding, FaHistory, FaInfoCircle } from 'react-icons/fa';
 import Layout from '@/components/Layout';
 
 export default function Home() {
@@ -23,6 +23,18 @@ export default function Home() {
     setResults([]);
     
     try {
+      // Simulando progresso
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + 10;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 500);
+      
       // Simulando a chamada à API
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -47,6 +59,7 @@ export default function Home() {
       alert('Ocorreu um erro ao buscar os dados. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
+      setProgress(100);
     }
   };
   
@@ -85,25 +98,65 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">G-Finder</h1>
-          <p className="text-gray-600">Captação de clientes no Google Maps</p>
-        </div>
+      <div className="max-w-5xl mx-auto px-4">
+        {/* Hero Section */}
+        <section className="text-center mb-10 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">G-Finder</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Capture leads qualificados do Google Maps para impulsionar seu negócio
+          </p>
+        </section>
         
-        <div className="card mb-6">
+        {/* Feature Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="card hover:border-primary/20 transition-all animate-slide-up">
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4">
+              <FaSearch className="text-primary text-lg" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Busca Inteligente</h3>
+            <p className="text-gray-600 text-sm">
+              Encontre potenciais clientes por palavra-chave e localização com resultados precisos.
+            </p>
+          </div>
+          
+          <div className="card hover:border-primary/20 transition-all animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4">
+              <FaBuilding className="text-primary text-lg" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Dados Completos</h3>
+            <p className="text-gray-600 text-sm">
+              Obtenha informações detalhadas sobre os negócios encontrados na sua região.
+            </p>
+          </div>
+          
+          <div className="card hover:border-primary/20 transition-all animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-4">
+              <FaDownload className="text-primary text-lg" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Exportação Fácil</h3>
+            <p className="text-gray-600 text-sm">
+              Exporte os resultados para Excel e integre com suas ferramentas de marketing.
+            </p>
+          </div>
+        </section>
+        
+        {/* Card Form */}
+        <div className="card shadow-lg mb-8 border-t-4 border-t-primary">
+          <h2 className="text-2xl font-bold mb-6">Comece a capturar leads agora</h2>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
-                <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaMapMarkerAlt className="text-gray-400" />
+                <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-2">CEP da Região</label>
+                <div className="input-field-group">
+                  <div className="input-icon">
+                    <FaMapMarkerAlt />
                   </div>
                   <input
                     id="cep"
                     type="text"
-                    className="input-field pl-10"
+                    className="input-field"
                     placeholder="00000-000"
                     value={cep}
                     onChange={(e) => {
@@ -117,27 +170,33 @@ export default function Home() {
                     }}
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Digite o CEP da área que deseja pesquisar
+                </p>
               </div>
               
               <div>
-                <label htmlFor="keyword" className="block text-sm font-medium text-gray-700 mb-1">Palavra-chave</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaSearch className="text-gray-400" />
+                <label htmlFor="keyword" className="block text-sm font-medium text-gray-700 mb-2">Palavra-chave</label>
+                <div className="input-field-group">
+                  <div className="input-icon">
+                    <FaSearch />
                   </div>
                   <input
                     id="keyword"
                     type="text"
-                    className="input-field pl-10"
+                    className="input-field"
                     placeholder="Ex: Restaurantes, Lojas..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Tipo de negócio que deseja encontrar
+                </p>
               </div>
               
               <div>
-                <label htmlFor="clientCount" className="block text-sm font-medium text-gray-700 mb-1">Número de Clientes</label>
+                <label htmlFor="clientCount" className="block text-sm font-medium text-gray-700 mb-2">Número de Clientes</label>
                 <input
                   id="clientCount"
                   type="number"
@@ -147,23 +206,36 @@ export default function Home() {
                   value={clientCount}
                   onChange={(e) => setClientCount(e.target.value)}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Quantidade de resultados (máx: 100)
+                </p>
+              </div>
+            </div>
+            
+            <div className="card-highlight mb-4">
+              <div className="flex items-start space-x-3">
+                <FaInfoCircle className="text-warning text-lg flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-gray-700">
+                  A busca pode levar alguns instantes dependendo da quantidade de resultados solicitados. 
+                  Aguarde a conclusão para visualizar todos os dados.
+                </p>
               </div>
             </div>
             
             <button 
               type="submit" 
-              className="btn-primary w-full flex items-center justify-center"
+              className="btn-primary w-full flex items-center justify-center shadow-button-lg"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
                   <FaSpinner className="animate-spin mr-2" />
-                  Buscando...
+                  Buscando leads...
                 </>
               ) : (
                 <>
                   <FaSearch className="mr-2" />
-                  Iniciar Captura
+                  Iniciar Captura de Leads
                 </>
               )}
             </button>
@@ -171,52 +243,62 @@ export default function Home() {
         </div>
         
         {isLoading && (
-          <div className="mb-6">
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">Progresso</span>
-              <span className="text-sm font-medium">{progress}%</span>
+          <div className="mb-10 card animate-fade-in">
+            <h3 className="font-semibold mb-3 flex items-center">
+              <FaHistory className="mr-2 text-primary" /> 
+              Progresso da Busca
+            </h3>
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm font-medium text-gray-700">Buscando dados no Google Maps</span>
+              <span className="text-sm font-medium text-primary">{progress}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="progress-bar mb-4">
               <div 
-                className="bg-primary h-2.5 rounded-full" 
+                className="progress-bar-value" 
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
+            <p className="text-sm text-gray-600">Aguarde enquanto coletamos as informações solicitadas...</p>
           </div>
         )}
         
         {results.length > 0 && (
-          <div className="card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Resultados ({results.length})</h2>
+          <div className="card shadow-lg mb-10 animate-slide-up">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold mb-1">Resultados da Busca</h2>
+                <p className="text-gray-600">
+                  {results.length} {results.length === 1 ? 'lead encontrado' : 'leads encontrados'} para "{keyword}" em {cep}
+                </p>
+              </div>
               <button 
                 onClick={handleExport}
-                className="btn-primary flex items-center"
+                className="btn-accent flex items-center self-stretch md:self-center"
               >
                 <FaDownload className="mr-2" />
-                Exportar XLSX
+                Exportar para Excel
               </button>
             </div>
             
-            <div className="overflow-auto max-h-96">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="table-container">
+              <table className="table">
+                <thead>
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nome
+                      Nome do Estabelecimento
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Telefone
+                      Telefone de Contato
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {results.map((result, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         {result.nome}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 text-sm text-gray-500">
                         {result.telefone}
                       </td>
                     </tr>

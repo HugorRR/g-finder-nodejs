@@ -5,8 +5,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --foreground-rgb: 51, 51, 51;
-  --background-rgb: 240, 240, 240;
+  --foreground-rgb: 31, 41, 55;
+  --background-rgb: 249, 250, 251;
+  --primary: 79, 70, 229;
+  --secondary: 67, 56, 202;
+  --accent: 16, 185, 129;
 }
 
 body {
@@ -15,16 +18,154 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+  
+  h1 {
+    @apply text-4xl font-bold;
+  }
+  
+  h2 {
+    @apply text-3xl font-bold;
+  }
+  
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+}
+
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary transition-colors duration-200;
+    @apply bg-primary text-white py-2.5 px-5 rounded-xl shadow-button hover:bg-secondary transition-all duration-300 font-medium focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-primary border border-primary py-2.5 px-5 rounded-xl shadow-button hover:bg-primary/5 transition-all duration-300 font-medium focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none;
+  }
+  
+  .btn-accent {
+    @apply bg-accent text-white py-2.5 px-5 rounded-xl shadow-button hover:bg-accent/90 transition-all duration-300 font-medium focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:outline-none;
+  }
+  
+  .btn-danger {
+    @apply bg-error text-white py-2.5 px-5 rounded-xl shadow-button hover:bg-error/90 transition-all duration-300 font-medium focus:ring-2 focus:ring-offset-2 focus:ring-error focus:outline-none;
   }
   
   .card {
-    @apply bg-card rounded-lg shadow-card p-6;
+    @apply bg-card rounded-2xl shadow-card p-6 border border-lightgray/50 transition-shadow duration-300 hover:shadow-lg;
+  }
+  
+  .card-highlight {
+    @apply bg-highlight border-l-4 border-warning rounded-2xl shadow-card p-6 transition-shadow duration-300;
   }
   
   .input-field {
-    @apply w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white;
   }
+  
+  .input-field-group {
+    @apply relative;
+  }
+  
+  .input-field-group .input-field {
+    @apply pl-10;
+  }
+  
+  .input-field-group .input-icon {
+    @apply absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400;
+  }
+  
+  .section-title {
+    @apply text-2xl font-bold text-text mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-lg font-medium text-gray-600 mb-6;
+  }
+  
+  .badge {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-lightgray text-darkgray;
+  }
+  
+  .badge-primary {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-primary text-white;
+  }
+  
+  .badge-accent {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-accent text-white;
+  }
+  
+  .badge-success {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-success text-white;
+  }
+  
+  .badge-warning {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-warning text-gray-800;
+  }
+  
+  .badge-error {
+    @apply px-2.5 py-1 text-xs font-semibold rounded-full bg-error text-white;
+  }
+
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2.5;
+  }
+  
+  .progress-bar-value {
+    @apply bg-primary h-2.5 rounded-full transition-all duration-300;
+  }
+
+  .table-container {
+    @apply overflow-x-auto rounded-xl border border-gray-200;
+  }
+  
+  .table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  
+  .table thead {
+    @apply bg-gray-50;
+  }
+  
+  .table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  
+  .table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm;
+  }
+  
+  .table tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+
+  /* Animações */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  
+  .animate-slide-right {
+    animation: slideRight 0.5s ease-out forwards;
+  }
+} 
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+} 
+
+@keyframes slideRight {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 } 
